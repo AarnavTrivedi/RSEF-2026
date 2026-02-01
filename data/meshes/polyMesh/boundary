@@ -1,0 +1,115 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD TooLBox           |
+|  \\    /   O peration     | Version:  v2006                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       polyBoundaryMesh;
+    location    "constant/polyMesh";
+    object      boundary;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+15
+(
+    inlet
+    {
+        type            patch;
+        nFaces          2208;
+        startFace       29220871;
+    }
+    WallCyl
+    {
+        type            wall;
+        inGroups        1(wall);
+        nFaces          57261;
+        startFace       29223079;
+    }
+    WallLungUpper
+    {
+        type            wall;
+        inGroups        1(wall);
+        nFaces          151167;
+        startFace       29280340;
+    }
+    outLB4
+    {
+        type            patch;
+        nFaces          1053;
+        startFace       29431507;
+    }
+    outLB1
+    {
+        type            patch;
+        nFaces          810;
+        startFace       29432560;
+    }
+    outLB3
+    {
+        type            patch;
+        nFaces          744;
+        startFace       29433370;
+    }
+    outLB2
+    {
+        type            patch;
+        nFaces          783;
+        startFace       29434114;
+    }
+    WallLungLower
+    {
+        type            wall;
+        inGroups        1(wall);
+        nFaces          85441;
+        startFace       29434897;
+    }
+    outLB5
+    {
+        type            patch;
+        nFaces          796;
+        startFace       29520338;
+    }
+    outRB1
+    {
+        type            patch;
+        nFaces          704;
+        startFace       29521134;
+    }
+    outRB3
+    {
+        type            patch;
+        nFaces          732;
+        startFace       29521838;
+    }
+    outRB2
+    {
+        type            patch;
+        nFaces          897;
+        startFace       29522570;
+    }
+    outRB4
+    {
+        type            patch;
+        nFaces          800;
+        startFace       29523467;
+    }
+    outRB5
+    {
+        type            patch;
+        nFaces          1228;
+        startFace       29524267;
+    }
+    outRB6
+    {
+        type            patch;
+        nFaces          782;
+        startFace       29525495;
+    }
+)
+
+// ************************************************************************* //

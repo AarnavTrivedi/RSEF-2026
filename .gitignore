@@ -23,3 +23,13 @@ venv/
 dist/
 build/
 out/
+
+# Large Data Files (>50MB)
+data/meshes/polyMesh/owner
+data/meshes/polyMesh/neighbour
+data/meshes/polyMesh/points
+data/meshes/polyMesh/faces
+data/data/raw/GSE18385/GSE18385 Series Matrix.txt
+data/data/raw/GSE153896/GSE153896 RAW/GSM4653878_Sciatic_3_day_rep3_matrix.mtx.gz
+data/data/raw/GSE47460/expression_matrix.csv
+data/raw/GSE18385/GSE18385 Series Matrix.txt
