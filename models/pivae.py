@@ -519,6 +519,7 @@ class PIVAE(nn.Module):
         bio_tb: Optional[torch.Tensor] = None,
         bio_alv: Optional[torch.Tensor] = None,
         z_true: Optional[torch.Tensor] = None,
+        label_mask: Optional[torch.Tensor] = None,
         beta: float = 0.01,
         gamma: float = 1.0,
         delta: float = 10.0
@@ -573,11 +574,60 @@ class PIVAE(nn.Module):
             losses['physics'] = torch.tensor(0.0, device=x.device)
         
         # 4. Supervised Loss (optional)
+        # 4. Supervised Loss (optional)
         if z_true is not None:
-            losses['supervised'] = F.mse_loss(
-                outputs['z_phys'],
-                z_true
-            )
+            # If mask is provided, use it
+            if label_mask is not None:
+                # Ensure booleanmask 
+                mask = label_mask.bool()
+                if mask.any():
+                    # Compute MSE only on labeled samples
+                    # TARGET: outputs['physics_params'] (Decoded Parameters) vs z_true
+                    # Need to extract relevant params matching z_true order [MMAD, GSD, Conc, Dur, Rate]
+                    # physics_decoder.forward returns 'physics_params' dict.
+                    # We need to stack them back to tensor or compare element-wise?
+                    # outputs['physics_params'] might be a dict. Check forward.
+                    # Yes, it is a dict. We need to stack or compare key-by-key.
+                    # z_true is tensor [B, 5]. 
+                    # Col 0: MMAD, 1: GSD, 2: Conc, 3: Duration, 4: BreathRate.
+                    
+                    phys_dict = outputs.get('physics_params')
+                    if phys_dict is not None:
+                         # Stack predictions: [B, 5]
+                         pred_phys = torch.stack([
+                             phys_dict['MMAD'],
+                             phys_dict['GSD'],
+                             phys_dict['Concentration'],
+                             phys_dict['Duration'],
+                             phys_dict['BreathRate']
+                         ], dim=1)
+                         
+                         losses['supervised'] = F.mse_loss(
+                            pred_phys[mask],
+                            z_true[mask]
+                         )
+                    else:
+                         # Fallback if params not returned (should not happen if return_params=True)
+                         losses['supervised'] = torch.tensor(0.0, device=x.device)
+                else:
+                    losses['supervised'] = torch.tensor(0.0, device=x.device)
+            else:
+                # Standard full supervision
+                phys_dict = outputs.get('physics_params')
+                if phys_dict is not None:
+                     pred_phys = torch.stack([
+                             phys_dict['MMAD'],
+                             phys_dict['GSD'],
+                             phys_dict['Concentration'],
+                             phys_dict['Duration'],
+                             phys_dict['BreathRate']
+                     ], dim=1)
+                     losses['supervised'] = F.mse_loss(
+                        pred_phys,
+                        z_true
+                     )
+                else:
+                     losses['supervised'] = torch.tensor(0.0, device=x.device)
         else:
             losses['supervised'] = torch.tensor(0.0, device=x.device)
         

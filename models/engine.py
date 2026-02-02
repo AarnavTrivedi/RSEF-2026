@@ -160,6 +160,127 @@ class PulmoTraceEngine:
             
         return self.test_data['X'][idx]
 
+    def generate_synthetic_cohort(self, n_samples: int = 50, scenario: str = "Mixed") -> pd.DataFrame:
+        """
+        Generate a synthetic cohort of patients using the VAE decoder.
+        
+        Args:
+            n_samples: Number of synthetic patients to generate.
+            scenario: 'Smoker' (High MMAD), 'Diesel' (Low MMAD), or 'Mixed'.
+            
+        Returns:
+            DataFrame with metadata (z_phys parameters) and gene expression.
+        """
+        if self.model is None:
+            raise ValueError("Model not loaded.")
+            
+        # 1. Sample Physics Latents (z_phys) based on Scenario
+        # Dimensions: [MMAD, GSD, Conc, Time, Rate]
+        # We focus mainly on MMAD (dim 0) for the visual effect
+        
+        z_phys = torch.zeros((n_samples, 5)).to(self.device)
+        
+        if scenario == "Smoker":
+            # Coarser particles (Tobacco smoke ~0.3 - 0.5 um, but let's exaggerate for viz)
+            # Log-Norm space? The model z_phys is mostly normalized. 
+            # Assuming latent space is roughly N(0,1), but physics params are specific.
+            # Let's target the interpretable range derived from training.
+            # For demo, we sweep MMAD in [0.3, 0.8] range
+            z_phys[:, 0] = torch.normal(mean=0.5, std=0.2, size=(n_samples,))
+            
+        elif scenario == "Diesel Exhaust":
+            # Ultrafine (<0.1 um)
+            z_phys[:, 0] = torch.normal(mean=-1.0, std=0.2, size=(n_samples,))
+            
+        else: # Mixed
+            # Multimodal distribution
+            n1 = n_samples // 2
+            n2 = n_samples - n1
+            z_phys[:n1, 0] = torch.normal(mean=0.5, std=0.3, size=(n1,)) # Coarse
+            z_phys[n1:, 0] = torch.normal(mean=-1.0, std=0.3, size=(n2,)) # Fine
+            
+        # Randomize other params (GSD, Conc, Time, Rate)
+        z_phys[:, 1:] = torch.randn((n_samples, 4)) 
+        
+        # 2. Sample Biological Latents (z_bio) ~ N(0, 1)
+        z_bio = torch.randn((n_samples, 3)).to(self.device)
+        
+        # 3. Decode -> Synthetic Expression
+        z = torch.cat([z_phys, z_bio], dim=1)
+        
+        with torch.no_grad():
+            x_recon = self.model.decoder(z)
+            # Re-scale from log-norm if needed, but we usually stay in log-space for heatmap
+            x_recon_np = x_recon.cpu().numpy()
+            
+        # 4. Construct DataFrame
+        # Genes columns
+        df = pd.DataFrame(x_recon_np, columns=self.gene_names)
+        
+        # Add Metadata columns
+        df['Scenario'] = scenario
+        if scenario == "Mixed":
+            # Infer label based on MMAD latent
+            df['Scenario'] = ['Smoker-Like' if z > -0.2 else 'Diesel-Like' for z in z_phys[:, 0].cpu().numpy()]
+            
+        df['z_mmad'] = z_phys[:, 0].cpu().numpy()
+        df['SampleID'] = [f"Syn_{i:03d}" for i in range(n_samples)]
+        
+        return df
+
+    def run_validation_study(self, n_samples: int = 100) -> Dict[str, Any]:
+        """
+        Run a full validation study:
+        1. Generate synthetic ground truth (z_true).
+        2. Decode to get synthetic expression (x_syn).
+        3. Re-encode to get inferred parameters (z_pred).
+        4. Calculate accuracy metrics.
+        """
+        if self.model is None:
+            raise ValueError("Model not loaded.")
+            
+        # 1. Generate Ground Truth (Covering full range)
+        z_phys_true = torch.zeros((n_samples, 5)).to(self.device)
+        # Scan MMAD from -2 to +2 (broad range)
+        z_phys_true[:, 0] = torch.linspace(-2, 2, n_samples).to(self.device)
+        # Randomize others
+        z_phys_true[:, 1:] = torch.randn((n_samples, 4)).to(self.device)
+        
+        z_bio_true = torch.randn((n_samples, 3)).to(self.device)
+        z_true = torch.cat([z_phys_true, z_bio_true], dim=1)
+        
+        with torch.no_grad():
+            # 2. Decode -> Synthetic Expression
+            x_syn = self.model.decode_biology(z_true)
+            
+            # 3. Re-Encode -> Inferred Latents
+            mu, _ = self.model.encode(x_syn)
+            
+            # 4. Physics Decoder (for explicit parameter recovery if used)
+            # pure z_phys from encoder
+            z_phys_pred = mu[:, :5]
+            
+        # Metrics
+        z_true_np = z_phys_true[:, 0].cpu().numpy()
+        z_pred_np = z_phys_pred[:, 0].cpu().numpy()
+        
+        from sklearn.metrics import r2_score, mean_squared_error
+        
+        r2 = r2_score(z_true_np, z_pred_np)
+        rmse = np.sqrt(mean_squared_error(z_true_np, z_pred_np))
+        
+        df = pd.DataFrame({
+            'True_MMAD_Latent': z_true_np,
+            'Pred_MMAD_Latent': z_pred_np,
+            'Error': np.abs(z_true_np - z_pred_np)
+        })
+        
+        return {
+            'metrics': {'R2': r2, 'RMSE': rmse},
+            'data': df,
+            'x_syn': x_syn.cpu().numpy() # For deconvolution validation
+        }
+
     def process_sample(self, expression_data: np.ndarray, sample_name: str = "Sample") -> Dict[str, Any]:
         """
         Run full analysis pipeline on a single sample.

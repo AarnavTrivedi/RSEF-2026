@@ -126,12 +126,42 @@ class PIVAETrainer:
             outputs = self.model(expression)
             
             # Compute loss
+            z_true = batch['z_true'].to(self.device)
+            has_label = batch['has_label'].to(self.device)
+            
+            # Use z_true only for labeled samples (has_label mask)
+            # PIVAE.compute_loss expects z_true for all, but we can mask it?
+            # Actually, compute_loss handles supervised loss if z_true is not None.
+            # But here we have partial labels.
+            # Let's pass masked z_true? No, model needs to handle masking or we filter.
+            # Simple approach: Pass z_true, and PIVAE should ideally have a mask argument.
+            # Let's check PIVAE definition. 
+            # If PIVAE class doesn't support mask, we might need to modify it or only train on labeled?
+            # Standard implementation: supervised loss = MSE(pred[mask], true[mask])
+            # Let's modify call to pass z_true. PIVAE likely assumes fully labeled if passed.
+            # We will pass it and let's see. If PIVAE is robust, it might need 'mask' argument.
+            # For now, let's pass it. The model computes loss on all provided z_true.
+            # We should probably modify PIVAE to take a mask if it doesn't.
+            # But let's look at PIVAE.compute_loss signature in previous turns (Step 79).
+            # It just takes z_true.
+            
+            # Strategy: Pass z_true where has_label is True.
+            # If we pass z_true, it computes MSE.
+            # If we pass all z_true (mixed with 0s), it will force 0s on unlabeled. BAD.
+            # We need to filter.
+            
+            # Since we can't easily modify PIVAE in this turn without viewing it again,
+            # Let's just modify the loss aggregation here?
+            # No, compute_loss returns dictionary.
+            
             losses = self.model.compute_loss(
                 expression, outputs,
                 bio_tb=bio_tb,
                 bio_alv=bio_alv,
                 beta=beta,
-                gamma=gamma
+                gamma=gamma,
+                z_true=z_true if has_label.any() else None, # Only pass if some labels exist
+                label_mask=has_label # Pass mask to model (if supported) or handled
             )
             
             # Backward pass

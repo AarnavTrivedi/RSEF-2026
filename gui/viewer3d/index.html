@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PulmoTrace 3D Airway Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            background: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: #1a1a2e;
+        }
+
+        #container {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+        }
+
+        /* View Toggle */
+        #view-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            pointer-events: auto;
+            background: white;
+            padding: 4px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            border: 1px solid #ddd;
+        }
+
+        .toggle-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+        }
+
+        .toggle-btn.active {
+            background: #0066cc;
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 102, 204, 0.3);
+        }
+
+        /* Info Panel */
+        #info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            pointer-events: auto;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 12px 18px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid #ddd;
+            font-size: 13px;
+            color: #333;
+        }
+
+        #info span {
+            color: #0066cc;
+            font-weight: 700;
+        }
+
+        /* Colorbar */
+        #colorbar-container {
+            position: absolute;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: auto;
+            transition: opacity 0.3s;
+        }
+
+        #colorbar-container.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #colorbar {
+            width: 24px;
+            height: 220px;
+            border-radius: 12px;
+            background: linear-gradient(to top, #0000ff, #00ffff, #00ff00, #ffff00, #ff0000);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid #ddd;
+        }
+
+        #colorbar-labels {
+            position: absolute;
+            right: 32px;
+            top: 0;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: #333;
+            font-size: 11px;
+            font-weight: 600;
+            text-align: right;
+            width: 40px;
+        }
+
+        #colorbar-title {
+            position: absolute;
+            right: 0;
+            top: -25px;
+            color: #333;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        /* Loading */
+        #loading {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.98);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 0.5s;
+        }
+
+        #loading.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0066cc;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        #loading p {
+            margin-top: 15px;
+            color: #0066cc;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container"></div>
+
+    <div id="ui-layer">
+        <div id="view-toggle">
+            <button class="toggle-btn active" id="btn-engineering"
+                onclick="setViewMode('engineering')">Engineering</button>
+            <button class="toggle-btn" id="btn-scientific" onclick="setViewMode('scientific')">Scientific</button>
+        </div>
+
+        <div id="info">
+            MMAD: <span id="mmad-val">2.5</span> µm | Flow: <span id="flow-val">30</span> L/min
+        </div>
+
+        <div id="colorbar-container" class="hidden">
+            <div id="colorbar-title">Deposition</div>
+            <div id="colorbar"></div>
+            <div id="colorbar-labels">
+                <span>High</span>
+                <span>Med</span>
+                <span>Low</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="loading">
+        <div class="loader"></div>
+        <p>Loading High-Fidelity CFD Viewer...</p>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { SSAOPass } from 'three/addons/postprocessing/SSAOPass.js';
+        import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+        import { GammaCorrectionShader } from 'three/addons/shaders/GammaCorrectionShader.js';
+
+        // Globals
+        let scene, camera, renderer, composer, controls, pmremGenerator;
+        let materials = {}, objects = {};
+        let state = { mode: 'engineering', mmad: 2.5, flow: 30.0 };
+
+        // Config
+        const CONFIG = {
+            bgColor: 0xffffff,
+            engColor: 0xe0e0e0, // Lighter Grey for better wireframe contrast
+            wireColor: 0x000000, // Pure Black for maximum visibility
+            engRoughness: 0.5,
+            engMetalness: 0.1
+        };
+
+        function init() {
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(CONFIG.bgColor);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 5000);
+            camera.position.set(300, 100, 400);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.0;
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.getElementById('container').appendChild(renderer.domElement);
+
+            // Environment (Critical for Physical Material)
+            pmremGenerator = new THREE.PMREMGenerator(renderer);
+            pmremGenerator.compileEquirectangularShader();
+            const environment = new RoomEnvironment();
+            scene.environment = pmremGenerator.fromScene(environment).texture;
+
+            // Lighting (Studio Setup)
+            setupLighting();
+
+            // ... rest of init
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+
+            // Post-Processing (SSAO)
+            setupPostProcessing();
+
+            // Load Mesh
+            loadMesh();
+
+            // Events
+            window.addEventListener('resize', onWindowResize);
+            animate();
+
+            // API
+            window.setViewMode = setViewMode;
+            window.updateDeposition = updateDeposition;
+        }
+
+        function setupLighting() {
+            // Ambient to prevent pitch black depth
+            const ambient = new THREE.AmbientLight(0xffffff, 0.4);
+            scene.add(ambient);
+
+            // Key Light (Sun)
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+            dirLight.position.set(200, 400, 200);
+            dirLight.castShadow = true;
+            dirLight.shadow.mapSize.width = 2048;
+            dirLight.shadow.mapSize.height = 2048;
+            dirLight.shadow.bias = -0.0001;
+            scene.add(dirLight);
+
+            // Fill Light
+            const fillLight = new THREE.DirectionalLight(0xeef2ff, 0.8);
+            fillLight.position.set(-200, 100, -100);
+            scene.add(fillLight);
+
+            // Rim Light (Back)
+            const rimLight = new THREE.DirectionalLight(0xffffff, 0.5);
+            rimLight.position.set(0, -200, -200);
+            scene.add(rimLight);
+        }
+
+        function setupPostProcessing() {
+            composer = new EffectComposer(renderer);
+
+            const renderPass = new RenderPass(scene, camera);
+            composer.addPass(renderPass);
+
+            // SSAO
+            const ssaoPass = new SSAOPass(scene, camera, window.innerWidth, window.innerHeight);
+            ssaoPass.kernelRadius = 16;     // Tuning for mesh scale
+            ssaoPass.minDistance = 0.001;
+            ssaoPass.maxDistance = 0.1;
+            composer.addPass(ssaoPass);
+
+            // Gamma Correction (Important!)
+            composer.addPass(new ShaderPass(GammaCorrectionShader));
+        }
+
+        function loadMesh() {
+            const loader = new GLTFLoader();
+            loader.load('meshes/lung_human02.glb', (gltf) => {
+                setupMesh(gltf.scene);
+            }, undefined, () => {
+                // Fallback
+                loader.load('meshes/lung_procedural.glb', (gltf) => {
+                    setupMesh(gltf.scene);
+                });
+            });
+        }
+
+        function setupMesh(meshScene) {
+            let geometry = null;
+            meshScene.traverse(c => { if (c.isMesh && !geometry) geometry = c.geometry; });
+
+            if (!geometry) return;
+
+            // Center
+            geometry.computeBoundingBox();
+            const center = new THREE.Vector3();
+            geometry.boundingBox.getCenter(center);
+            geometry.translate(-center.x, -center.y, -center.z);
+
+            // Materials
+            materials.eng = new THREE.MeshPhysicalMaterial({
+                color: CONFIG.engColor,
+                roughness: CONFIG.engRoughness,
+                metalness: CONFIG.engMetalness,
+                clearcoat: 0.1,
+                clearcoatRoughness: 0.2,
+                side: THREE.DoubleSide,
+                polygonOffset: true,
+                polygonOffsetFactor: 1, // Push back to show wireframe
+                polygonOffsetUnits: 1
+            });
+
+            // Vertex Colors for Science Mode
+            const count = geometry.attributes.position.count;
+            geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
+
+            materials.sci = new THREE.MeshStandardMaterial({
+                vertexColors: true,
+                roughness: 0.4,
+                metalness: 0.1,
+                side: THREE.DoubleSide
+            });
+
+            materials.wire = new THREE.LineBasicMaterial({
+                color: CONFIG.wireColor,
+                transparent: true,
+                opacity: 0.4, // Boosted visibility
+                depthTest: true
+            });
+
+            // Mesh Object
+            objects.mesh = new THREE.Mesh(geometry, materials.eng);
+            objects.mesh.castShadow = true;
+            objects.mesh.receiveShadow = true;
+            scene.add(objects.mesh);
+
+            // Wireframe Object
+            const wires = new THREE.WireframeGeometry(geometry);
+            objects.wire = new THREE.LineSegments(wires, materials.wire);
+            scene.add(objects.wire);
+
+            // Camera Fit
+            const size = geometry.boundingBox.getSize(new THREE.Vector3());
+            const maxDim = Math.max(size.x, size.y, size.z);
+            camera.position.set(maxDim, maxDim * 0.6, maxDim * 1.5);
+            controls.target.set(0, 0, 0);
+            controls.update();
+
+            document.getElementById('loading').classList.add('hidden');
+
+            // Init data
+            updateDeposition(2.5, 30);
+        }
+
+        function setViewMode(mode) {
+            state.mode = mode;
+            if (!objects.mesh) return;
+
+            // Buttons
+            document.getElementById('btn-engineering').classList.toggle('active', mode === 'engineering');
+            document.getElementById('btn-scientific').classList.toggle('active', mode === 'scientific');
+
+            // Visuals
+            objects.mesh.material = mode === 'engineering' ? materials.eng : materials.sci;
+            objects.wire.visible = mode === 'engineering';
+
+            const cb = document.getElementById('colorbar-container');
+            if (mode === 'scientific') cb.classList.remove('hidden');
+            else cb.classList.add('hidden');
+        }
+
+        function updateDeposition(mmad, flow) {
+            document.getElementById('mmad-val').textContent = mmad.toFixed(1);
+            document.getElementById('flow-val').textContent = flow.toFixed(0);
+
+            if (!objects.mesh) return;
+
+            // Calculate colors (Same logic as before)
+            const pos = objects.mesh.geometry.attributes.position;
+            const col = objects.mesh.geometry.attributes.color;
+            const bounds = objects.mesh.geometry.boundingBox;
+            const h = bounds.max.z - bounds.min.z;
+
+            for (let i = 0; i < pos.count; i++) {
+                const z = pos.getZ(i);
+                const zn = (z - bounds.min.z) / h;
+
+                // Simple physics placeholder
+                let t = zn * (mmad / 10) + Math.min(1, (mmad * mmad) / 100 * Math.exp(-zn * 3));
+                t = Math.min(Math.max(t, 0), 1);
+
+                // Rainbow map
+                const c = new THREE.Color().setHSL(0.66 - t * 0.66, 1.0, 0.5); // Blue to Red
+                col.setXYZ(i, c.r, c.g, c.b);
+            }
+            col.needsUpdate = true;
+        }
+
+        function onWindowResize() {
+            const w = window.innerWidth, h = window.innerHeight;
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
+            renderer.setSize(w, h);
+            composer.setSize(w, h);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            composer.render();
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

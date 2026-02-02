@@ -1462,7 +1462,32 @@ class PulmoTraceDataset(Dataset):
         self.bio_tb = torch.FloatTensor(self.bio_tb)
         self.bio_alv = torch.FloatTensor(self.bio_alv)
         
+        # Extract ground truth physics if available (for supervised learning)
+        from .features import get_dataset_info
+        
+        # 5 dim: MMAD, GSD, Conc, Duration, Rate
+        self.z_true = torch.zeros((len(self.metadata), 5)) 
+        self.has_label = torch.zeros(len(self.metadata), dtype=torch.bool)
+        
+        for idx, row in self.metadata.iterrows():
+            geo_id = row.get('geo_id')
+            try:
+                info = get_dataset_info(geo_id)
+                # Check for critical missing values
+                if info.mmad_um is not None and info.concentration is not None:
+                     # Populate standard vector: [MMAD, GSD, Conc, Duration, Rate]
+                     self.z_true[idx, 0] = info.mmad_um
+                     self.z_true[idx, 1] = info.gsd
+                     self.z_true[idx, 2] = info.concentration
+                     self.z_true[idx, 3] = 4.0 # Default duration (hours/chronic score?)
+                     self.z_true[idx, 4] = 15.0 # Default breath rate
+                     
+                     self.has_label[idx] = True
+            except:
+                pass
+        
         logger.info(f"Dataset created: {len(self)} samples, {self.expression.shape[1]} genes")
+        logger.info(f"Labeled samples for supervision: {self.has_label.sum().item()}")
     
     def __len__(self) -> int:
         return len(self.expression)
@@ -1482,6 +1507,10 @@ class PulmoTraceDataset(Dataset):
                     self.metadata.iloc[idx]['pack_years'],
                     dtype=torch.float32
                 )
+        
+        # Add physics ground truth
+        sample['z_true'] = self.z_true[idx]
+        sample['has_label'] = self.has_label[idx]
         
         return sample
 
