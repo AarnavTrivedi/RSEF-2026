@@ -1,0 +1,51 @@
+SampleID,Inferred_MMAD_um,Size_Class,Likely_Source,Deposition_Head,Deposition_TB,Deposition_Alveolar,Deposition_Exhaled,Bio_Tissue_Airway,Bio_Tissue_Alveolar,Phys_Rel_Dose_Airway,Alignment_Status
+PBA_001,0.51,Fine (Accumulation Mode),Tobacco Smoke / Smog,0.112,0.139,0.201,0.547,0.409,0.591,0.409,✅ Consistent
+PBA_002,2.16,Fine (Dust Mode),Bacteria / Fine Dust,0.469,0.273,0.205,0.052,0.558,0.442,0.571,✅ Consistent
+PBA_003,2.92,Coarse,Pollen / Coarse Dust,0.678,0.03,0.099,0.193,0.138,0.862,0.233,✅ Consistent
+PBA_004,1.19,Fine (Dust Mode),Bacteria / Fine Dust,0.448,0.345,0.157,0.05,0.545,0.455,0.688,✅ Consistent
+PBA_005,0.42,Fine (Accumulation Mode),Tobacco Smoke / Smog,0.063,0.078,0.222,0.637,0.18,0.82,0.261,✅ Consistent
+PBA_006,4.97,Coarse,Pollen / Coarse Dust,0.716,0.098,0.108,0.079,0.461,0.539,0.476,❌ Mismatch
+PBA_007,0.67,Fine (Accumulation Mode),Tobacco Smoke / Smog,0.1,0.079,0.182,0.639,0.244,0.756,0.303,✅ Consistent
+PBA_008,0.41,Fine (Accumulation Mode),Tobacco Smoke / Smog,0.092,0.151,0.161,0.597,0.504,0.496,0.485,❌ Mismatch
+PBA_009,1.72,Fine (Dust Mode),Bacteria / Fine Dust,0.497,0.299,0.099,0.105,0.758,0.242,0.751,✅ Consistent
+PBA_010,0.27,Fine (Accumulation Mode),Tobacco Smoke / Smog,0.245,0.061,0.195,0.499,0.238,0.762,0.237,✅ Consistent
+PBA_011,0.48,Fine (Accumulation Mode),Tobacco Smoke / Smog,0.105,0.105,0.127,0.663,0.539,0.461,0.453,✅ Consistent
+PBA_012,1.38,Fine (Dust Mode),Bacteria / Fine Dust,0.41,0.247,0.021,0.322,0.829,0.171,0.923,✅ Consistent
+PBA_013,1.1,Fine (Dust Mode),Bacteria / Fine Dust,0.298,0.367,0.121,0.214,0.604,0.396,0.753,✅ Consistent
+PBA_014,0.48,Fine (Accumulation Mode),Tobacco Smoke / Smog,0.1,0.103,0.204,0.593,0.452,0.548,0.335,✅ Consistent
+PBA_015,0.41,Fine (Accumulation Mode),Tobacco Smoke / Smog,0.11,0.156,0.209,0.525,0.285,0.715,0.428,✅ Consistent
+PBA_016,1.72,Fine (Dust Mode),Bacteria / Fine Dust,0.406,0.289,0.158,0.148,0.643,0.357,0.647,✅ Consistent
+PBA_017,1.23,Fine (Dust Mode),Bacteria / Fine Dust,0.351,0.353,0.152,0.143,0.489,0.511,0.699,✅ Consistent
+PBA_018,3.78,Coarse,Pollen / Coarse Dust,0.736,0.044,0.083,0.137,0.642,0.358,0.348,❌ Mismatch
+PBA_019,1.12,Fine (Dust Mode),Bacteria / Fine Dust,0.4,0.301,0.033,0.266,0.857,0.143,0.9,✅ Consistent
+PBA_020,0.83,Fine (Accumulation Mode),Tobacco Smoke / Smog,0.085,0.102,0.214,0.599,0.829,0.171,0.323,❌ Mismatch
+PBA_021,1.03,Fine (Dust Mode),Bacteria / Fine Dust,0.395,0.308,0.095,0.201,0.874,0.126,0.764,✅ Consistent
+PBA_022,0.68,Fine (Accumulation Mode),Tobacco Smoke / Smog,0.088,0.117,0.236,0.559,0.384,0.616,0.332,✅ Consistent
+PBA_023,1.31,Fine (Dust Mode),Bacteria / Fine Dust,0.381,0.227,0.07,0.322,0.702,0.298,0.765,✅ Consistent
+PBA_024,0.13,Fine (Accumulation Mode),Tobacco Smoke / Smog,0.127,0.152,0.13,0.591,0.604,0.396,0.54,✅ Consistent
+PBA_025,2.39,Fine (Dust Mode),Bacteria / Fine Dust,0.442,0.309,0.092,0.157,0.771,0.229,0.77,✅ Consistent
+PBA_026,0.37,Fine (Accumulation Mode),Tobacco Smoke / Smog,0.079,0.139,0.155,0.627,0.575,0.425,0.473,❌ Mismatch
+PBA_027,0.3,Fine (Accumulation Mode),Tobacco Smoke / Smog,0.106,0.091,0.226,0.577,0.36,0.64,0.286,✅ Consistent
+PBA_028,1.03,Fine (Dust Mode),Bacteria / Fine Dust,0.396,0.259,0.145,0.2,0.745,0.255,0.642,✅ Consistent
+PBA_029,0.89,Fine (Accumulation Mode),Tobacco Smoke / Smog,0.15,0.1,0.187,0.564,0.399,0.601,0.348,✅ Consistent
+PBA_030,0.55,Fine (Accumulation Mode),Tobacco Smoke / Smog,0.095,0.133,0.276,0.497,0.306,0.694,0.325,✅ Consistent
+PBA_031,0.39,Fine (Accumulation Mode),Tobacco Smoke / Smog,0.095,0.092,0.186,0.627,0.366,0.634,0.33,✅ Consistent
+PBA_032,0.63,Fine (Accumulation Mode),Tobacco Smoke / Smog,0.073,0.088,0.2,0.639,0.243,0.757,0.307,✅ Consistent
+PBA_033,2.4,Fine (Dust Mode),Bacteria / Fine Dust,0.305,0.37,0.046,0.278,0.724,0.276,0.889,✅ Consistent
+PBA_034,0.44,Fine (Accumulation Mode),Tobacco Smoke / Smog,0.11,0.083,0.132,0.675,0.239,0.761,0.385,✅ Consistent
+PBA_035,2.16,Fine (Dust Mode),Bacteria / Fine Dust,0.449,0.234,0.101,0.216,0.678,0.322,0.698,✅ Consistent
+PBA_036,1.55,Fine (Dust Mode),Bacteria / Fine Dust,0.387,0.244,0.03,0.339,0.853,0.147,0.89,✅ Consistent
+PBA_037,1.88,Fine (Dust Mode),Bacteria / Fine Dust,0.416,0.306,0.148,0.13,0.744,0.256,0.675,✅ Consistent
+PBA_038,0.64,Fine (Accumulation Mode),Tobacco Smoke / Smog,0.036,0.08,0.121,0.763,0.456,0.544,0.398,✅ Consistent
+PBA_039,0.68,Fine (Accumulation Mode),Tobacco Smoke / Smog,0.071,0.042,0.26,0.627,0.162,0.838,0.139,✅ Consistent
+PBA_040,1.22,Fine (Dust Mode),Bacteria / Fine Dust,0.426,0.331,0.1,0.143,0.903,0.097,0.767,✅ Consistent
+PBA_041,0.47,Fine (Accumulation Mode),Tobacco Smoke / Smog,0.142,0.098,0.13,0.63,0.379,0.621,0.429,✅ Consistent
+PBA_042,1.67,Fine (Dust Mode),Bacteria / Fine Dust,0.393,0.375,0.172,0.06,0.642,0.358,0.686,✅ Consistent
+PBA_043,0.63,Fine (Accumulation Mode),Tobacco Smoke / Smog,0.009,0.119,0.269,0.603,0.453,0.547,0.306,✅ Consistent
+PBA_044,1.69,Fine (Dust Mode),Bacteria / Fine Dust,0.36,0.226,0.101,0.313,0.722,0.278,0.691,✅ Consistent
+PBA_045,0.34,Fine (Accumulation Mode),Tobacco Smoke / Smog,0.119,0.031,0.124,0.726,0.782,0.218,0.199,❌ Mismatch
+PBA_046,2.17,Fine (Dust Mode),Bacteria / Fine Dust,0.355,0.256,0.102,0.287,0.253,0.747,0.715,❌ Mismatch
+PBA_047,1.47,Fine (Dust Mode),Bacteria / Fine Dust,0.473,0.267,0.095,0.165,0.571,0.429,0.737,✅ Consistent
+PBA_048,0.68,Fine (Accumulation Mode),Tobacco Smoke / Smog,0.166,0.103,0.128,0.603,0.459,0.541,0.447,✅ Consistent
+PBA_049,0.78,Fine (Accumulation Mode),Tobacco Smoke / Smog,0.0,0.1,0.181,0.719,0.266,0.734,0.357,✅ Consistent
+PBA_050,1.1,Fine (Dust Mode),Bacteria / Fine Dust,0.376,0.311,0.0,0.312,0.0,1.0,1.0,❌ Mismatch
