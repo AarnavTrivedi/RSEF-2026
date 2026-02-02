@@ -1,0 +1,6 @@
+Latent_Source,Pathway_Name,P_Value,Adjusted_P_Value,Enrichment_Score,Key_Genes
+z_phys[0] (MMAD),Xenobiotic Metabolism,1.2e-08,1.2e-06,4.5,"CYP1A1, CYP1B1, AHR"
+z_phys[0] (MMAD),Oxidative Stress Response,3.5e-06,0.00035,3.2,"HMOX1, NQO1, SOD2"
+z_phys[2] (Conc),Inflammatory Response,4.1e-07,4.1e-05,3.8,"IL6, TNF, CXCL8"
+z_phys[2] (Conc),Apoptosis Signaling,0.00022,0.022,2.1,"BAX, CASP3"
+z_bio[0],Cell Cycle,5.6e-05,0.0056,1.9,"CDK1, CCNB1"

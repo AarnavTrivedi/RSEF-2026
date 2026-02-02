@@ -1,0 +1,7 @@
+Variable,Unit,R2_Score,RMSE,MAE,MAPE_Percent,Pearson_r
+MMAD (Particle Size),μm,0.942,0.15,0.11,5.2,0.971
+Concentration,μg/m³,0.915,45.2,32.5,8.4,0.958
+Exposure Duration,min,0.89,5.4,4.1,7.1,0.945
+GSD (Polydispersity),Geometric SD,0.82,0.12,0.09,4.5,0.91
+Regional Deposition (TB),Fraction,0.965,0.03,0.02,3.2,0.983
+Regional Deposition (ALV),Fraction,0.958,0.04,0.03,3.8,0.979
