@@ -149,6 +149,10 @@ def main():
     # (Actually script generated raw float, checking CSV... generated np.round(..., 2/3). Good.)
     render_table(df7, "Table 7: Detailed Forensic Analysis", "table7_alignment.png", top_n=10)
     
+    # 8. Side-by-Side Comparison
+    df8 = pd.read_csv(os.path.join(DATA_DIR, 'table8_side_by_side_alignment.csv'))
+    render_table(df8, "Table 8: Deconvolution vs Predicted Regional Fraction", "table8_alignment_comparison.png", top_n=20)
+    
     print(f"✨ All tables rendered to {TABLES_OUT_DIR}")
 
 if __name__ == "__main__":

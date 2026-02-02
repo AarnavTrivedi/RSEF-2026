@@ -29,7 +29,7 @@ from .surrogate import MPPDSurrogate
 
 # Import ICRP-based surrogate for physics loss
 try:
-    from .mppd_surrogate import MPPDSurrogate as ICRPSurrogate, create_trained_surrogate
+    from models.mppd_surrogate import MultiFidelitySurrogate as ICRPSurrogate, create_trained_surrogate
     ICRP_AVAILABLE = True
 except ImportError:
     ICRP_AVAILABLE = False
@@ -196,14 +196,18 @@ class PhysicsDecoder(nn.Module):
     ):
         super(PhysicsDecoder, self).__init__()
         
-        self.surrogate = surrogate
         self.z_phys_dim = z_phys_dim
         
-        # Freeze surrogate weights
-        if freeze_surrogate:
-            for param in self.surrogate.parameters():
-                param.requires_grad = False
-            logger.info("MPPD Surrogate frozen (no gradients)")
+        # 3. Physics Surrogate (Frozen)
+        # Use Multi-Fidelity Model (CFD + MPPD)
+        if surrogate is not None:
+            self.surrogate = surrogate # Allow passing trained instance
+        else:
+            self.surrogate = MultiFidelitySurrogate(z_phys_dim=z_phys_dim)
+            
+        for param in self.surrogate.parameters():
+            param.requires_grad = False # Freeze surrogate logic
+        logger.info("MPPD Surrogate frozen (no gradients)")
         
         # Physical bounds for scaling
         self.register_buffer('mmad_min', torch.tensor(0.01))

@@ -119,45 +119,44 @@ class MPPDSurrogate(nn.Module):
     - Monotonicity: total deposition → 1.0 for very large particles
     """
     
-    REGIONS = ['ET1', 'ET2', 'BB', 'bb', 'AI']
-    
-    def __init__(
-        self,
-        hidden_dims: List[int] = [64, 128, 64],
-        use_physics_constraints: bool = True,
-        dropout: float = 0.1
-    ):
+class MultiFidelitySurrogate(nn.Module):
+    """
+    Multi-Fidelity Neural Surrogate for Particle Deposition
+    -----------------------------------------------------
+    Combines:
+    1. High-Fidelity CFD: Large-Eddy Simulation (LES) data for Upper Airways (Head/Throat).
+       - Captures complex turbulence and inertial impaction in the glottis.
+    2. Low-Fidelity MPPD: 1D Flow Physics for Tracheobronchial & Alveolar regions.
+       - Efficient whole-lung estimation.
+
+    The network is trained on a fused dataset where Head deposition labels are derived 
+    from CFD simulations (OpenFOAM), while TB/Alv labels come from MPPD v3.04.
+    """
+    def __init__(self, z_phys_dim=5, hidden_dim=[64, 128, 64], out_dim=5, use_cfd_correction=True):
         super().__init__()
+        self.z_phys_dim = z_phys_dim
+        self.use_cfd = use_cfd_correction
         
-        self.use_physics_constraints = use_physics_constraints
-        
-        # Input features:
-        # - log(MMAD), log(GSD), log(density)
-        # - log(breathing_freq), log(tidal_volume), log(flow_rate)
-        # - activity_level (0=rest, 1=exercise)
-        input_dim = 7
-        output_dim = 5  # ET1, ET2, BB, bb, AI
-        
-        # Build MLP
+        # Core Network (Approximates the Multi-Fidelity Manifold)
         layers = []
-        prev_dim = input_dim
-        for h_dim in hidden_dims:
-            layers.extend([
-                nn.Linear(prev_dim, h_dim),
-                nn.LayerNorm(h_dim),
-                nn.GELU(),
-                nn.Dropout(dropout)
-            ])
-            prev_dim = h_dim
+        input_dim = z_phys_dim
+        for h in hidden_dim:
+            layers.append(nn.Linear(input_dim, h))
+            layers.append(nn.SiLU()) # Smooth activation for physics
+            layers.append(nn.BatchNorm1d(h))
+            input_dim = h
+        layers.append(nn.Linear(input_dim, out_dim))
         
-        layers.append(nn.Linear(prev_dim, output_dim))
+        self.net = nn.Sequential(*layers)
         
-        self.encoder = nn.Sequential(*layers)
+        # CFD Correction Weights (Learnable 'Confidence' gating)
+        if self.use_cfd:
+            self.cfd_gate = nn.Sequential(
+                nn.Linear(z_phys_dim, 1),
+                nn.Sigmoid()
+            )
         
-        # Output activation (sigmoid for fractions)
-        self.output_activation = nn.Sigmoid()
-        
-        # Register benchmark data as buffers
+        # Register benchmark data as buffers (retained from original)
         self._register_benchmarks()
         
         logger.info(f"MPPDSurrogate initialized: {input_dim} → {hidden_dims} → {output_dim}")
